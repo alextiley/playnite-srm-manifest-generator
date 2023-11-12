@@ -23,9 +23,10 @@ function OnLibraryUpdated()
     # for each store, get the correct exe and launch options
     switch -Wildcard ($Game.Library.Name) {
       "Amazon Games" {
+        $AmazonGamesExe = [AmazonGamesLibrary.AmazonGames]::ClientExecPath
         $StartIn = [AmazonGamesLibrary.AmazonGames]::InstallationPath
-        $Target = [AmazonGamesLibrary.AmazonGames]::ClientExecPath
-        $LaunchOptions = "amazon-games://play/%GameId%"
+        $Target = (Get-Command cmd.exe).Path
+        $LaunchOptions = "/c start ""Launcher"" ""${AmazonGamesExe}"" && timeout 6 >NUL 2>&1 && cmd /c start ""Launcher"" ""$AmazonGamesExe"" amazon-games://play/%GameId%"
       }
       "Battle.net" {
         $StartIn = [BattleNetLibrary.BattleNet]::InstallationPath
