@@ -2,15 +2,15 @@ function Write-Manifest {
   [CmdletBinding()]
   param (
     [Parameter(Mandatory, ValueFromPipeline)]
-    [PSCustomObject[]]$Manifests,
+    [PSCustomObject[]]$ManifestsWithStores,
     [Parameter(Mandatory)]
     [string]$OutputDir
   )
   PROCESS {
-    $GroupedManifests = $Manifests | Group-Object store
-    foreach ($Group in $GroupedManifests) {
-      foreach ($Manifest in $Group.Group) {
-        $Manifest.PSObject.Properties.Remove('store')
+    $GroupedManifestsWithStores = $ManifestsWithStores | Group-Object store
+    foreach ($Group in $GroupedManifestsWithStores) {
+      foreach ($Item in $Group.Group) {
+        $Item.PSObject.Properties.Remove('store')
       }
       $Store = $Group.Name
       $StoreDir = Join-Path -Path $OutputDir -ChildPath $Store
@@ -26,11 +26,20 @@ function OnLibraryUpdated()
   $PlayniteExe = Get-Process -Name "Playnite*" | Select-Object -ExpandProperty Path
   $PlayniteDir = Split-Path -Path $PlayniteExe -Parent
 
-  # get all games that are not hidden
-  $Games = $PlayniteApi.Database.Games | Where-Object {$_.Hidden -eq 0} | Select-Object Id, Name, GameId, Hidden, PluginId, @{Name='Library'; Expr={$PluginId = $_.PluginId; $PlayniteApi.Addons.Plugins | where { $_.Id -eq $PluginId }}}, @{Name='Platforms'; Expr={($_.Platforms| Select-Object -ExpandProperty "Name") -Join '|'}}
+  # get all applicable games
+  $AllGames = $PlayniteApi.Database.Games
+  $VisibleGames = $AllGames | Where-Object {$_.Hidden -eq 0}
+  $GamesWithLibraries = $VisibleGames | Select-Object
+    Id,
+    Name,
+    PluginId,
+    @{Name='Library'; Expr={
+      $PluginId = $_.PluginId;
+      $PlayniteApi.Addons.Plugins | where { $_.Id -eq $PluginId }
+    }}
 
-  # convert to SRM manifest format
-  $Manifests = $Games | ForEach-Object {
+  # convert to SRM manifest format, but also `store` property for grouping later
+  $ManifestsWithStores = $GamesWithLibraries | ForEach-Object {
     [PSCustomObject]@{
       store = $_.Library.Name
       title = $_.Name;
@@ -43,5 +52,5 @@ function OnLibraryUpdated()
   $__logger.Info("Writing manifests to $CurrentExtensionDataPath")
 
   # write manifest files for each store front
-  ,$Manifests | Write-Manifest -OutputDir $CurrentExtensionDataPath
+  ,$ManifestsWithStores | Write-Manifest -OutputDir $CurrentExtensionDataPath
 }
