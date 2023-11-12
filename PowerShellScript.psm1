@@ -22,16 +22,9 @@ function Write-Manifest {
 
 function OnLibraryUpdated()
 {
-  $__logger.Info("OnLibraryUpdated")
-
-  try {
-    $PlayniteExe = Get-Process -Name "Playnite.DesktopApp" | Select-Object -ExpandProperty Path
-  } catch {
-    $PlayniteExe = Get-Process -Name "Playnite.FullscreenApp" | Select-Object -ExpandProperty Path
-  }
+  # figure out which process is running
+  $PlayniteExe = Get-Process -Name "Playnite*" | Select-Object -ExpandProperty Path
   $PlayniteDir = Split-Path -Path $PlayniteExe -Parent
-
-  $PlayniteApi.Dialogs.ShowMessage("Library updated, $PlayniteExe will now write manifests to $CurrentExtensionDataPath!")
 
   # get all games that are not hidden
   $Games = $PlayniteApi.Database.Games | Where-Object {$_.Hidden -eq 0} | Select-Object Id, Name, GameId, Hidden, PluginId, @{Name='Library'; Expr={$PluginId = $_.PluginId; $PlayniteApi.Addons.Plugins | where { $_.Id -eq $PluginId }}}, @{Name='Platforms'; Expr={($_.Platforms| Select-Object -ExpandProperty "Name") -Join '|'}}
@@ -41,18 +34,14 @@ function OnLibraryUpdated()
     [PSCustomObject]@{
       store = $_.Library.Name
       title = $_.Name;
-      target = $PlayniteExe;
+      target = "$PlayniteDir\Playnite.DesktopApp";
       startIn = $PlayniteDir;
       launchOptions = "--hidesplashscreen --nolibupdate --start " + $_.Id
     }
   }
 
+  $__logger.Info("Writing manifests to $CurrentExtensionDataPath")
+
   # write manifest files for each store front
   ,$Manifests | Write-Manifest -OutputDir $CurrentExtensionDataPath
 }
-
-
-$s = "c:\programfiles\tv\version8\uninstall.exe"
-Split-Path -Path $s -Leaf
-Split-Path -Path $s -Parent
-Split-Path -Path (Split-Path -Path $s -Parent) -Leaf
