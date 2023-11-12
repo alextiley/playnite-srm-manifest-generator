@@ -18,15 +18,15 @@ function OnLibraryUpdated()
   $__logger.Info("install path is $PlayniteDir")
   $__logger.Info("extension data path is $CurrentExtensionDataPath")
 
+  # TODO: If launcher not installed, don't generate a manifest?
   [System.Collections.ArrayList]$ManifestsWithStores =  @()
   foreach ($Game in $Games) {
     # for each store, get the correct exe and launch options
     switch -Wildcard ($Game.Library.Name) {
       "Amazon Games" {
-        $AmazonGamesExe = [AmazonGamesLibrary.AmazonGames]::ClientExecPath
         $StartIn = [AmazonGamesLibrary.AmazonGames]::InstallationPath
-        $Target = (Get-Command cmd.exe).Path
-        $LaunchOptions = "/c start ""Launcher"" ""${AmazonGamesExe}"" && timeout 6 >NUL 2>&1 && cmd /c start ""Launcher"" ""$AmazonGamesExe"" amazon-games://play/%GameId%"
+        $Target = [AmazonGamesLibrary.AmazonGames]::ClientExecPath
+        $LaunchOptions = "amazon-games://play/%GameId%"
       }
       "Battle.net" {
         $StartIn = [BattleNetLibrary.BattleNet]::InstallationPath
@@ -36,22 +36,17 @@ function OnLibraryUpdated()
       "EA app" {
         $StartIn = [OriginLibrary.Origin]::InstallationPath
         $Target = [OriginLibrary.Origin]::ClientExecPath
-        $LaunchOptions = "origin2://game/launch/?offerids=%GameId%&autoDownload=1"
+        $LaunchOptions = "origin2://library/open"
       }
       "Epic" {
         $StartIn = [EpicLibrary.EpicLauncher]::InstallationPath
         $Target = [EpicLibrary.EpicLauncher]::ClientExecPath
-        $LaunchOptions = "com.epicgames.launcher://apps/%GameId%?action=launch&silent=true"
+        $LaunchOptions = "-com.epicgames.launcher://apps/%GameId%?action=launch"
       }
       "GOG" {
         $StartIn = [GogLibrary.Gog]::InstallationPath
         $Target = [GogLibrary.Gog]::ClientExecPath
-        $LaunchOptions = "/launchViaAutostart /gameId=%GameId% /command=runGame /path=""${[GogLibrary.Gog]::InstallationPath}"""
-      }
-      "Riot Launcher" {
-        $StartIn = [Riot.RiotChecks]::InstallationPath
-        $Target = [Riot.RiotChecks]::ClientExecPath
-        $LaunchOptions = "--launch-product=%GameId% --launch-patchline=live"
+        $LaunchOptions = "/launchViaAutostart /gameId=%GameId% /command=runGame"
       }
       "Steam" {
         $StartIn = [SteamLibrary.Steam]::InstallationPath
@@ -62,12 +57,6 @@ function OnLibraryUpdated()
         $StartIn = [UplayLibrary.Uplay]::InstallationPath
         $Target = [UplayLibrary.Uplay]::ClientExecPath
         $LaunchOptions = "uplay://launch/%GameId%"
-      }
-      # This wont work, need to figure out if this is even possible
-      "Xbox" {
-        $StartIn = "shell:appsFolder"
-        $Target = "explorer.exe"
-        $LaunchOptions = "shell:appsFolder\Microsoft.GamingApp_8wekyb3d8bbwe!%GameId%"
       }
       default {
         $StartIn = $PlayniteDir
