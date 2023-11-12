@@ -29,14 +29,7 @@ function OnLibraryUpdated()
   # get all applicable games
   $AllGames = $PlayniteApi.Database.Games
   $VisibleGames = $AllGames | Where-Object {$_.Hidden -eq 0}
-  $GamesWithLibraries = $VisibleGames | Select-Object
-    Id,
-    Name,
-    PluginId,
-    @{Name='Library'; Expr={
-      $PluginId = $_.PluginId;
-      $PlayniteApi.Addons.Plugins | where { $_.Id -eq $PluginId }
-    }}
+  $GamesWithLibraries = $VisibleGames | Select-Object Id, Name, PluginId, @{Name='Library'; Expr={ $PluginId = $_.PluginId; $PlayniteApi.Addons.Plugins | where { $_.Id -eq $PluginId } }}
 
   # convert to SRM manifest format, but also `store` property for grouping later
   $ManifestsWithStores = $GamesWithLibraries | ForEach-Object {
