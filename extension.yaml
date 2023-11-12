@@ -1,5 +1,5 @@
-﻿Id: SteamRomManagerParserConfigGenerator_aa232152-0f9b-43e0-8bd8-047e097371b0
-Name: Steam Rom Manager Parser Config Generator
+﻿Id: SteamRomManagerManifestGenerator
+Name: Steam Rom Manager Manifest Generator
 Author: Alex Tiley
 Version: 1.0
 Module: PowerShellScript.psm1
