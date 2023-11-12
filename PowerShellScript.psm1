@@ -40,7 +40,7 @@ function OnLibraryUpdated()
   $DataDir = $CurrentExtensionDataPath
 
   $__logger.Info("process path is $PlayniteExe")
-  $__logger.Info("install path is $PlayniteExe")
+  $__logger.Info("install path is $PlayniteDir")
   $__logger.Info("extension data path is $CurrentExtensionDataPath")
 
   # convert to SRM manifest format, but also `store` property for grouping later
